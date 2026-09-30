@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Drive Bulk Ownership Transfer",
+  "version": "1.0.0",
+  "description": "Transfer Google Drive file and folder ownership in bulk using the official Drive API v3.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Drive Ownership Transfer",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "identity",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://www.googleapis.com/*",
+    "https://oauth2.googleapis.com/*",
+    "https://accounts.google.com/*"
+  ],
+  "oauth2": {
+    "client_id": "542515017914-0c133gqipk1gllg0i222pcvfd9187nrl.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/drive",
+      "https://www.googleapis.com/auth/userinfo.email",
+      "openid"
+    ]
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmFVJN8gmf08X4H2GnbNA+K59Y1uqI8UswR4IStcmU89D5Hb5L0bJ3H3I5fogLmeJKgwEcpWqFfcxqnwtQPTUCI9lfd+4VITbnxU0TzB4aFrDUI+5daDOq/6qpK4D+TABRjGTLc7g6qNDUOgxSQGUX6oEvfOoj3Q+mNWardRvMjXPqOAeJaJCrPlhdn4RTmzqupYnhzTQ2BkhFpj6fCXOnWAgH87eoYYSk1Gi54AGzZ18c/jNyn4aZ1lUkR35EkL0R9+9spGeO19MU7VrujnuTCWYtRtnsO6OrFzJ0UX/yEO7LwUWbO0HU6vu5Gie6UJhZtKg3bZM7Rc4U5h1Rf5LWQIDAQAB"
+}

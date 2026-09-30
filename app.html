@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Drive Bulk Ownership Transfer</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div>
+          <h1>Drive Bulk Ownership Transfer</h1>
+          <div class="muted">Official Google Drive API v3 only. Nothing is transferred until you click Start Transfer.</div>
+        </div>
+        <div class="account" id="account-box">Not signed in</div>
+      </header>
+
+      <div class="steps" id="steps">
+        <span data-step="setup">1. Setup</span>
+        <span data-step="signin">2. Sign in</span>
+        <span data-step="scan">3. Scan</span>
+        <span data-step="review">4. Review</span>
+        <span data-step="transfer">5. Transfer</span>
+      </div>
+
+      <section class="card" id="card-setup">
+        <h2>1. Setup</h2>
+        <p class="muted">Create an OAuth client in Google Cloud, then paste the client ID here. Tokens are stored only in this browser profile.</p>
+        <label for="client-id">OAuth 2.0 client ID</label>
+        <input id="client-id" type="text" placeholder="123456789-abc.apps.googleusercontent.com" autocomplete="off" />
+        <label>Extension ID (add this to a Chrome extension OAuth client, or use the redirect URI below)</label>
+        <div class="copy-row">
+          <input id="extension-id" type="text" readonly />
+          <button type="button" class="secondary" data-copy="extension-id">Copy</button>
+        </div>
+        <label>Authorized redirect URI (add this exactly to a Web or Desktop OAuth client)</label>
+        <div class="copy-row">
+          <input id="redirect-uri" type="text" readonly />
+          <button type="button" class="secondary" data-copy="redirect-uri">Copy</button>
+        </div>
+        <label for="target-email">Target account (new owner)</label>
+        <input id="target-email" type="email" />
+        <label for="transfer-mode">Transfer mode</label>
+        <select id="transfer-mode">
+          <option value="auto">Auto-detect from the signed-in account</option>
+          <option value="workspace">Google Workspace, same organization (immediate transfer)</option>
+          <option value="consumer">Personal Gmail (two-phase pending owner)</option>
+        </select>
+        <div class="row">
+          <button type="button" id="save-setup">Save setup</button>
+        </div>
+        <div id="setup-status"></div>
+      </section>
+
+      <section class="card" id="card-auth">
+        <h2>2. Sign in</h2>
+        <p class="muted">Phase 1 / Workspace: sign in as the <strong>source</strong> (current owner). Phase 2: sign out, then sign in as the <strong>target</strong> to accept pending transfers. Click Sign in once and wait for Google’s window — don’t click again if a popup is already open.</p>
+        <div class="row">
+          <button type="button" id="btn-signin-source">Sign in as source</button>
+          <button type="button" id="btn-signin-target" class="secondary">Sign in as target (Phase 2)</button>
+          <button type="button" id="btn-signout" class="secondary">Sign out</button>
+        </div>
+        <div id="auth-status"></div>
+      </section>
+
+      <section class="card" id="card-scan">
+        <h2>3. Scan My Drive</h2>
+        <p class="muted">Lists every non-trashed item you own so you can search and pick later. Nothing is transferred from this scan until you add specific files or folders in step 4. Transferring a folder does not move ownership of the files inside it, so adding a folder also selects the owned files and subfolders in it.</p>
+        <div class="row">
+          <button type="button" id="btn-scan">Scan owned files and folders</button>
+        </div>
+        <div id="scan-status" class="muted"></div>
+      </section>
+
+      <section class="card hidden" id="card-review">
+        <h2>4. Review before any change</h2>
+        <div class="stats" id="review-stats"></div>
+        <div id="review-warning"></div>
+        <h3>Skipped items</h3>
+        <ul class="skip-list" id="skip-summary"></ul>
+        <div class="info" id="phase-note"></div>
+        <h3>Choose files and folders</h3>
+        <p class="muted">Search shows folder <em>names</em>. Photos inside “Het camera” will not appear until you click <strong>Add folder + contents</strong> (or paste the folder link). You must be signed in as the owner.</p>
+        <label for="pick-links">Paste Google Drive links or IDs</label>
+        <textarea id="pick-links" placeholder="https://drive.google.com/drive/folders/...&#10;https://drive.google.com/file/d/..."></textarea>
+        <div class="row">
+          <button type="button" id="btn-add-links" class="secondary">Add pasted links (folder + contents)</button>
+        </div>
+        <label for="pick-search">Or search your scan</label>
+        <input id="pick-search" type="text" placeholder="Folder name, e.g. Het camera" />
+        <div id="pick-results" class="pick-list"></div>
+        <p class="muted" id="pick-summary">0 items selected.</p>
+        <div id="pick-selected" class="pick-selected"></div>
+        <div class="row">
+          <button type="button" id="btn-clear-selection" class="secondary">Clear selection</button>
+        </div>
+        <div id="pick-status"></div>
+        <label class="confirm">
+          <input type="checkbox" id="ack-checkbox" />
+          <span>I understand this changes ownership of the <strong>selected</strong> items. The previous owner is kept as a writer. File contents are not downloaded, moved, or deleted.</span>
+        </label>
+        <div class="row">
+          <button type="button" id="btn-dry-run" class="secondary">Dry run (no changes)</button>
+          <button type="button" id="btn-start" disabled>Start Transfer</button>
+          <button type="button" id="btn-export-preview" class="secondary">Download CSV preview</button>
+        </div>
+      </section>
+
+      <section class="card hidden" id="card-progress">
+        <h2>5. Progress</h2>
+        <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
+        <div class="stats" id="progress-stats"></div>
+        <p class="muted" id="progress-current"></p>
+        <div class="row">
+          <button type="button" id="btn-pause" class="secondary">Pause</button>
+          <button type="button" id="btn-resume" class="secondary">Resume</button>
+          <button type="button" id="btn-cancel" class="danger">Cancel</button>
+          <button type="button" id="btn-export-report" class="secondary">Export CSV report</button>
+          <button type="button" id="btn-clear-state" class="danger">Clear saved state</button>
+        </div>
+        <div id="phase2-box" class="info hidden">
+          <p id="phase2-copy">Personal Gmail cannot finish the transfer until the target account authorizes this extension and accepts each pending owner invite.</p>
+          <p id="phase2-status"></p>
+          <div class="row">
+            <button type="button" id="btn-phase2">Accept pending transfers</button>
+          </div>
+        </div>
+        <h3>Log</h3>
+        <div class="log" id="log"></div>
+      </section>
+
+      <section class="card">
+        <h2>What this tool will not do</h2>
+        <ul class="skip-list">
+          <li>Shared Drive files have no personal owner, so they cannot be transferred.</li>
+          <li>Google blocks transfers across different Workspace organizations.</li>
+          <li>Google blocks personal Gmail ↔ Workspace ownership transfers.</li>
+          <li>Items you do not own, and items the API marks as not shareable, are skipped.</li>
+          <li>For Gmail-to-Gmail, the target must sign in here and accept. Until then, ownership has not changed.</li>
+          <li>The old owner is never removed as a writer. Nothing is deleted or downloaded.</li>
+        </ul>
+      </section>
+    </div>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,5 @@
+.DS_Store
+*.pem
+.env
+oauth-client.json
+node_modules/
